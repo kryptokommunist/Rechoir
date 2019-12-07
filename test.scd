@@ -191,7 +191,7 @@ OSCdef("sound",
 ///////////////////////////////////////////////////////////
 EnvGen
 (a = {
-	arg t_env, reverb_mix = 0.33, reverb_room = 0.5, reverb_damp = 0.5;
+	arg t_env, reverb_mix = 0.5 , reverb_room = 0.05, reverb_damp = 0.01;
 	var env = Env.new([1,1,0], [0.1,global_decay]).ar(0, t_env); //[0.5 -> hold time (max dur between osc msgs), 1 -> release time]
 			var result = Mix.ar([In.ar(bus_bassDrone)*In.kr(bassDrone_vol).lag(vol_lag), In.ar(bus_midDrone)*In.kr(midDrone_vol).lag(vol_lag), In.ar(bus_lead)*In.kr(lead_vol).lag(vol_lag)])*env;
 	result = FreeVerb.ar(result, mix: reverb_mix, room: reverb_room, damp: reverb_damp, mul: 3.0).distort;

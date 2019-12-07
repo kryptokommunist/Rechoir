@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QComboBox, QPushButton
 progname = os.path.basename(sys.argv[0])
 progversion = "0.1"
 
-DELAY = 10
+DELAY = 50
 OSC_PORT = 57120
 OSC_IP = "127.0.0.1"
 
@@ -28,6 +28,7 @@ def send_osc(input_data):
     """
     Send input via OSC
     """
+    print(input_data)
     client.send_message("/sound", input_data)
 
 def normalize_data(data_input):
@@ -80,6 +81,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
         timer.timeout.connect(self.update_figure)
         self.xdata = None
         self.ydata = None
+        self.title = None
         self.line_pos = 0
         timer.start(DELAY)
 
@@ -91,6 +93,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.cla()
         self.axes.scatter(self.xdata, self.ydata, 1)
         self.axes.axvline(x=self.xdata.iloc[self.line_pos])
+        self.axes.set_title(self.title)
         self.draw()
 
 
@@ -121,8 +124,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         l.addWidget(self.cb)
         self.plots = []
         for i in range(4):
-            dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-            l.addWidget(dc)
+            dc = MyDynamicMplCanvas(self.main_widget, width=10, height=18 , dpi=80)
+            l.addWidget(dc, 1)
             self.plots.append(dc)
         self.play = QPushButton('Play', self)
         l.addWidget(self.play)
@@ -138,20 +141,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def selectionchange(self,engine):
         data = self.data[self.data['ESN'] == int(self.cb.itemText(engine))].sort_values(by=['DATETIME'])
-        data = data[(data['DATETIME'] > '2037-06-01') & (data['DATETIME'] < '2038-02-01')]
-        self.normalized_data = normalize_data(data[["ESN", "P0", "P2", "OP", "DN1", "DTGT", "DFF", "DT30", "DFF"]])
+        data = data[(data['DATETIME'] > '2037-12-01') & (data['DATETIME'] < '2038-06-01')]
+        self.normalized_data = normalize_data(data[["P0", "P2", "DT30", "DN1", "OP", "DTGT", "DFF", "DP30"]])
 
-        cols = ['DT30', 'DP30', 'DN2', 'DFF']
+        cols = ['DT30', 'DP30', 'DTGT', 'DFF']
         for i, plt in enumerate(self.plots):
             plt.xdata = data['DATETIME']
             plt.ydata = data[cols[i]]
+            plt.title = cols[i]
             plt.line_pos = 0
 
     def loop(self):
         if self.playing:
             for plt in self.plots:
                 plt.line_pos += 1
-            send_osc(list(self.normalized_data.iloc[self.plots[0].line_pos]))
+            msg = list(self.normalized_data.iloc[self.plots[0].line_pos])
+            msg[0] = 1
+            msg[1] = 0
+            msg[3] = 1
+            msg[4] = 0
+            msg[6] = 1
+            send_osc(msg)
                 
 
     def on_click(self):
