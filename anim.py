@@ -141,10 +141,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def selectionchange(self,engine):
         data = self.data[self.data['ESN'] == int(self.cb.itemText(engine))].sort_values(by=['DATETIME'])
-        data = data[(data['DATETIME'] > '2037-12-01') & (data['DATETIME'] < '2038-06-01')]
+        data = data[(data['DATETIME'] > '2040-07-20') & (data['DATETIME'] < '2040-09-01')]
         self.normalized_data = normalize_data(data[["P0", "P2", "DT30", "DN1", "OP", "DTGT", "DFF", "DP30"]])
 
-        cols = ['DT30', 'DP30', 'DTGT', 'DFF']
+        cols = ['OP', 'OT', 'DTGT', 'PSTATIC']
+        # cols = ['DT30', 'DP30', 'DTGT', 'DFF']
         for i, plt in enumerate(self.plots):
             plt.xdata = data['DATETIME']
             plt.ydata = data[cols[i]]
